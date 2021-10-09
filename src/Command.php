@@ -6,6 +6,8 @@ use Symfony\Component\Console\Command\Command as SymfonyCommand;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Input\ArrayInput;
+use Symfony\Component\Console\Input\InputArgument;
+use Symfony\Component\Console\Input\InputOption;
 
 abstract class Command extends SymfonyCommand
 {
@@ -55,7 +57,7 @@ abstract class Command extends SymfonyCommand
      *
      * @var string|null
      */
-    protected $description;
+    protected $description = 'Command description';
 
     /**
      * The console command help text.
@@ -79,6 +81,8 @@ abstract class Command extends SymfonyCommand
         $this->setDescription((string) $this->description);
 
         $this->setHelp((string) $this->help);
+
+        $this->specifyParameters();
     }
 
     /**
@@ -171,5 +175,78 @@ abstract class Command extends SymfonyCommand
         $input = new ArrayInput($parameters);
 
         return $command->run($input, $this->output);
+    }
+
+    /**
+     * Determine if the given option is present.
+     *
+     * @param  string  $name
+     * @return bool
+     */
+    public function hasOption($name)
+    {
+        return $this->input->hasOption($name);
+    }
+
+    /**
+     * Get the value of a command option.
+     *
+     * @param  string|null  $key
+     * @return string|array|bool|null
+     */
+    public function option($key = null)
+    {
+        if (is_null($key)) {
+            return $this->input->getOptions();
+        }
+
+        return $this->input->getOption($key);
+    }
+
+    /**
+     * Specify the arguments and options on the command.
+     *
+     * @return void
+     */
+    protected function specifyParameters()
+    {
+        // We will loop through all of the arguments and options for the command and
+        // set them all on the base command instance. This specifies what can get
+        // passed into these commands as "parameters" to control the execution.
+        foreach ($this->getArguments() as $arguments) {
+            if ($arguments instanceof InputArgument) {
+                $this->getDefinition()->addArgument($arguments);
+            } else {
+                $this->addArgument(...array_values($arguments));
+            }
+        }
+
+        foreach ($this->getOptions() as $options) {
+            if ($options instanceof InputOption) {
+                $this->getDefinition()->addOption($options);
+            } else {
+                $this->addOption(...array_values($options));
+            }
+        }
+    }
+
+    /**
+     * Get the console command arguments.
+     *
+     * @return array
+     */
+    protected function getArguments()
+    {
+        return [];
+    }
+
+    /**
+     * Get the console command options.
+     *
+     * @return array
+     */
+    protected function getOptions()
+    {
+        return [];
     }
 }

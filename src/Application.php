@@ -24,10 +24,12 @@ class Application extends SymfonyApplication
         parent::__construct('PhpConsole', static::VERSION);
 
         $path = realpath($basePath) . DIRECTORY_SEPARATOR;
-        try {
-            $in = new ArgvInput(null, $this->getDefaultInputDefinition());
-            $path .= $in->getOption('app') . DIRECTORY_SEPARATOR;
-        } catch (\Throwable $e) {}
+        $args = $_SERVER['argv'];
+        if ($_SERVER['argc'] < 2) {
+            $args[] = 'list';
+        }
+        $in = new ArgvInput($args, $this->getDefaultInputDefinition());
+        $path .= $in->getOption('app') . DIRECTORY_SEPARATOR;
         $this->path = $path;
         $path .= $commandDir;
         $resolve = new Resolve($path);

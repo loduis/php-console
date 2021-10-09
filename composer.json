@@ -1,0 +1,17 @@
+{
+    "autoload": {
+        "psr-4": {
+            "PhpConsole\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "PhpConsole\\Tests\\App\\": "tests/app/"
+        }
+    },
+    "require": {
+        "symfony/console": "^5.2",
+        "symfony/dependency-injection": "^5.2",
+        "symfony/finder": "^5.2"
+    }
+}

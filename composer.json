@@ -1,4 +1,17 @@
 {
+    "name": "loduis/php-console",
+    "authors": [
+        {
+            "name": "Loduis Madariaga Barrios",
+            "email": "loduis@gmail.com"
+        }
+    ],
+    "require": {
+        "php": "^7.4",
+        "symfony/console": "^5.2",
+        "symfony/dependency-injection": "^5.2",
+        "symfony/finder": "^5.2"
+    },
     "autoload": {
         "psr-4": {
             "PhpConsole\\": "src/"
@@ -9,9 +22,9 @@
             "PhpConsole\\Tests\\App\\": "tests/app/"
         }
     },
-    "require": {
-        "symfony/console": "^5.2",
-        "symfony/dependency-injection": "^5.2",
-        "symfony/finder": "^5.2"
-    }
+    "minimum-stability": "dev",
+    "config": {
+        "sort-packages": true
+    },
+    "prefer-stable": true
 }

@@ -17,6 +17,8 @@ class Application extends SymfonyApplication
 
     protected $defaultCommands = [];
 
+    private string $path;
+
     public function __construct(string $basePath, string $commandDir)
     {
         parent::__construct('PhpConsole', static::VERSION);
@@ -26,6 +28,7 @@ class Application extends SymfonyApplication
             $in = new ArgvInput(null, $this->getDefaultInputDefinition());
             $path .= $in->getOption('app') . DIRECTORY_SEPARATOR;
         } catch (\Throwable $e) {}
+        $this->path = $path;
         $path .= $commandDir;
         $resolve = new Resolve($path);
         $commands = [];
@@ -41,6 +44,15 @@ class Application extends SymfonyApplication
     public static function create(string $basePath, string $commandDir = 'Commands')
     {
         return new static($basePath, $commandDir);
+    }
+
+    /**
+     * Base path where run de application
+     * @return string
+     */
+    public function path(): string
+    {
+        return $this->path;
     }
 
     /**

@@ -4,34 +4,18 @@ namespace PhpConsole;
 
 use ReflectionClass;
 use Symfony\Component\Console\Application as SymfonyApplication;
-use Symfony\Component\Console\Input\InputOption;
 use PhpConsole\Command\Resolve;
 use InvalidArgumentException;
-use Symfony\Component\Console\Input\ArgvInput;
-use Symfony\Component\Console\Input\InputDefinition;
 use Symfony\Component\Console\CommandLoader\FactoryCommandLoader;
 
 class Application extends SymfonyApplication
 {
     const VERSION = '1.0';
 
-    protected $defaultCommands = [];
-
-    private string $path;
-
     public function __construct(string $basePath, string $commandDir)
     {
         parent::__construct('PhpConsole', static::VERSION);
-
-        $path = realpath($basePath) . DIRECTORY_SEPARATOR;
-        $args = $_SERVER['argv'];
-        if ($_SERVER['argc'] < 2) {
-            $args[] = 'list';
-        }
-        $in = new ArgvInput($args, $this->getDefaultInputDefinition());
-        $path .= $in->getOption('app') . DIRECTORY_SEPARATOR;
-        $this->path = $path;
-        $path .= $commandDir;
+        $path = realpath($basePath) . DIRECTORY_SEPARATOR .$commandDir;
         $resolve = new Resolve($path);
         $commands = [];
         foreach ($resolve->commands() as $command => $className) {
@@ -46,45 +30,6 @@ class Application extends SymfonyApplication
     public static function create(string $basePath, string $commandDir = 'Commands')
     {
         return new static($basePath, $commandDir);
-    }
-
-    /**
-     * Base path where run de application
-     * @return string
-     */
-    public function path(): string
-    {
-        return $this->path;
-    }
-
-    /**
-     * Gets the default commands that should always be available.
-     *
-     * @return Command[] An array of default Command instances
-     */
-    protected function getDefaultCommands()
-    {
-        return array_merge(parent::getDefaultCommands(), $this->defaultCommands);
-    }
-
-    /**
-     * Gets the default input definition.
-     *
-     * @return InputDefinition An InputDefinition instance
-     */
-    protected function getDefaultInputDefinition(): InputDefinition
-    {
-        $definition = parent::getDefaultInputDefinition();
-        $option = new InputOption(
-            '--app',
-            null,
-            InputOption::VALUE_REQUIRED,
-            'The application directory the command should run under',
-            'app'
-        );
-        $definition->addOption($option);
-
-        return $definition;
     }
 
     /**

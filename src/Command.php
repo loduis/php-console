@@ -201,11 +201,37 @@ abstract class Command extends SymfonyCommand
      */
     public function option($key = null)
     {
-        if (is_null($key)) {
+        if ($key === null) {
             return $this->input->getOptions();
         }
 
         return $this->input->getOption($key);
+    }
+
+    /**
+     * Determine if the given argument is present.
+     *
+     * @param  string|int  $name
+     * @return bool
+     */
+    public function hasArgument($name)
+    {
+        return $this->input->hasArgument($name);
+    }
+
+    /**
+     * Get the value of a command argument.
+     *
+     * @param  string|null  $key
+     * @return string|array|null
+     */
+    public function argument($key = null)
+    {
+        if ($key === null) {
+            return $this->input->getArguments();
+        }
+
+        return $this->input->getArgument($key);
     }
 
     /**

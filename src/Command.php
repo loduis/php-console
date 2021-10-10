@@ -173,7 +173,7 @@ abstract class Command extends SymfonyCommand
      *
      * @throws \Symfony\Component\Console\Exception\CommandNotFoundException
      */
-    protected function call(string $command, ...$parameters)
+    protected function call(string $command, array $parameters = [])
     {
         $command = $this->getApplication()->find($command);
 

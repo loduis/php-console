@@ -92,7 +92,7 @@ abstract class Command extends SymfonyCommand
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        return $this->__invoke($input, $output);
+        return (int) $this->__invoke($input, $output);
     }
 
     /**

@@ -81,8 +81,6 @@ abstract class Command extends SymfonyCommand
         $this->setDescription((string) $this->description);
 
         $this->setHelp((string) $this->help);
-
-        $this->specifyParameters();
     }
 
     /**
@@ -94,10 +92,17 @@ abstract class Command extends SymfonyCommand
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        return $this->__invoke();
+        return $this->__invoke($input, $output);
     }
 
-    abstract public function __invoke(): int;
+    /**
+     * Execute the console command.
+     *
+     * @param  \Symfony\Component\Console\Input\InputInterface  $input
+     * @param  \Symfony\Component\Console\Output\OutputInterface  $output
+     * @return int
+     */
+    abstract public function __invoke();
 
     /**
      * Write a string as information output.
@@ -208,7 +213,7 @@ abstract class Command extends SymfonyCommand
      *
      * @return void
      */
-    protected function specifyParameters()
+    protected function configure(): void
     {
         // We will loop through all of the arguments and options for the command and
         // set them all on the base command instance. This specifies what can get

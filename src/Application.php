@@ -14,11 +14,10 @@ class Application extends SymfonyApplication
 {
     const VERSION = '1.0';
 
-    public function __construct(string $basePath, string $commandDir, array $commandShared = [])
+    public function __construct(string $commandDir, array $commandShared = [])
     {
         parent::__construct('PhpConsole', static::VERSION);
-        $path = realpath($basePath) . DIRECTORY_SEPARATOR .$commandDir;
-        $resolve = new Resolve($path);
+        $resolve = new Resolve($commandDir);
         $commands = [];
         foreach ($resolve->commands() + $commandShared as $command => $className) {
             $commands[$command] = function () use ($className) {
@@ -29,9 +28,9 @@ class Application extends SymfonyApplication
         $this->setCommandLoader($commandLoader);
     }
 
-    public static function create(string $basePath, string $commandDir, array $commandShared = [])
+    public static function create(string $commandDir, array $commandShared = [])
     {
-        return new static($basePath, $commandDir, $commandShared);
+        return new static($commandDir, $commandShared);
     }
 
     /**

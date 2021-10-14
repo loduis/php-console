@@ -2,10 +2,12 @@
 
 namespace PhpConsole;
 
+use Closure;
 use ReflectionClass;
 use Symfony\Component\Console\Application as SymfonyApplication;
 use PhpConsole\Command\Resolve;
 use InvalidArgumentException;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\CommandLoader\FactoryCommandLoader;
 
 class Application extends SymfonyApplication
@@ -30,6 +32,31 @@ class Application extends SymfonyApplication
     public static function create(string $basePath, string $commandDir = 'Commands')
     {
         return new static($basePath, $commandDir);
+    }
+
+    /**
+     * Captures the value of the environment to be reestablished
+     *
+     * @param Closure $callback
+     *
+     * @return self
+     */
+    public function environment(Closure $callback): self
+    {
+        $args = $_SERVER['argv'] ?? [];
+        foreach ($args as $i => $value) {
+            if ($value === '--env') {
+                $callback($args[$i + 1] ?? null);
+                break;
+            }
+
+            if (strpos($value, '--env') === 0) {
+                $callback(reset(array_slice(explode('=', $value), 1)));
+                break;
+            }
+        }
+
+        return $this;
     }
 
     /**
@@ -69,5 +96,25 @@ class Application extends SymfonyApplication
         }
 
         return $parameters;
+    }
+
+    /**
+     * Gets the default input definition.
+     *
+     * @return InputDefinition An InputDefinition instance
+     */
+    protected function getDefaultInputDefinition()
+    {
+        $def = parent::getDefaultInputDefinition();
+        $def->addOption(
+            new InputOption(
+                '--env',
+                null,
+                InputOption::VALUE_OPTIONAL,
+                'The environment the command should run under'
+            )
+        );
+
+        return $def;
     }
 }

@@ -25,7 +25,6 @@ class Source
     {
         $source       = $this->getContents($source);
         $this->tokens = token_get_all($source);
-        print_r($this->tokens);
         $this->count  = count($this->tokens);
         $this->index  = -1;
     }

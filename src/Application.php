@@ -86,10 +86,11 @@ class Application extends SymfonyApplication
     {
         $parameters = [];
         foreach ($class->getConstructor()->getParameters() as $parameter) {
-            $paramClass = $parameter->getClass();
-            if ($paramClass === null) {
+            $paramType = $parameter->getType();
+            if ($paramType === null) {
                 throw new InvalidArgumentException("The parameter: '" . $parameter->name . "' there is not valid class");
             }
+            $paramClass       = new ReflectionClass($paramType->getName());
             $value            = $paramClass->newInstance();
             $pos              = $parameter->getPosition();
             $parameters[$pos] = $value;

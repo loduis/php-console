@@ -25,6 +25,7 @@ class Source
     {
         $source       = $this->getContents($source);
         $this->tokens = token_get_all($source);
+        print_r($this->tokens);
         $this->count  = count($this->tokens);
         $this->index  = -1;
     }
@@ -152,8 +153,9 @@ class Source
 
     public function getNamespace()
     {
+        $search = PHP_VERSION_ID < 80000 ? [T_STRING, T_NS_SEPARATOR] : T_NAME_QUALIFIED;
         if ($this->findToken(T_NAMESPACE) &&
-            ($namespace = $this->getTokenContent([T_STRING, T_NS_SEPARATOR]))
+            ($namespace = $this->getTokenContent($search))
         ) {
             if (strpos($namespace, '\\') !== 0) {
                 $namespace = "\\$namespace";

@@ -200,8 +200,8 @@ class Source
         };
 
         if ($this->findToken([T_PRIVATE, T_PROTECTED, T_PUBLIC], $where)) {
-            $properySource = $this->getTokenContentUntil(';', '=');
-            return $properySource;
+            $propertySource = $this->getTokenContentUntil(';', '=');
+            return $propertySource;
         }
 
         return false;

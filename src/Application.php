@@ -8,6 +8,7 @@ use Symfony\Component\Console\Application as SymfonyApplication;
 use PhpConsole\Command\Resolve;
 use InvalidArgumentException;
 use Symfony\Component\Console\Input\InputOption;
+use Symfony\Component\Console\Input\InputDefinition;
 use Symfony\Component\Console\CommandLoader\FactoryCommandLoader;
 
 class Application extends SymfonyApplication
@@ -104,7 +105,7 @@ class Application extends SymfonyApplication
      *
      * @return InputDefinition An InputDefinition instance
      */
-    protected function getDefaultInputDefinition()
+    protected function getDefaultInputDefinition(): InputDefinition
     {
         $def = parent::getDefaultInputDefinition();
         $def->addOption(

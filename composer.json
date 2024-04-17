@@ -28,6 +28,6 @@
     },
     "prefer-stable": true,
     "extra" : {
-        "branch-alias" : {"dev-master" : "6.0.x-dev"}
+        "branch-alias" : {"dev-main" : "6.0.x-dev"}
     }
 }

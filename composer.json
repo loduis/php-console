@@ -1,5 +1,9 @@
 {
     "name": "loduis/php-console",
+    "description": "A lightweight PHP console application framework with Laravel-style commands and automatic discovery",
+    "type": "library",
+    "keywords": ["console", "cli", "command", "symfony", "laravel-style"],
+    "license": "MIT",
     "authors": [
         {
             "name": "Loduis Madariaga Barrios",
@@ -28,6 +32,6 @@
     },
     "prefer-stable": true,
     "extra" : {
-        "branch-alias" : {"dev-main" : "6.0.x-dev"}
+        "branch-alias" : {"dev-main" : "6.1.x-dev"}
     }
 }

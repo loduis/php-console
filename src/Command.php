@@ -21,7 +21,7 @@ abstract class Command extends SymfonyCommand
     /**
      * The output interface implementation.
      *
-     * @var \Illuminate\Console\OutputStyle
+     * @var \Symfony\Component\Console\Output\OutputInterface
      */
     protected OutputInterface $output;
 
@@ -114,6 +114,130 @@ abstract class Command extends SymfonyCommand
     public function info($string, $verbosity = null)
     {
         $this->line($string, 'info', $verbosity);
+    }
+
+    /**
+     * Write a string as error output.
+     *
+     * @param  string  $string
+     * @param  int|string|null  $verbosity
+     * @return void
+     */
+    public function error($string, $verbosity = null)
+    {
+        $this->line($string, 'error', $verbosity);
+    }
+
+    /**
+     * Write a string as warning output.
+     *
+     * @param  string  $string
+     * @param  int|string|null  $verbosity
+     * @return void
+     */
+    public function warn($string, $verbosity = null)
+    {
+        $this->line($string, 'fg=yellow', $verbosity);
+    }
+
+    /**
+     * Write a string as comment output.
+     *
+     * @param  string  $string
+     * @param  int|string|null  $verbosity
+     * @return void
+     */
+    public function comment($string, $verbosity = null)
+    {
+        $this->line($string, 'comment', $verbosity);
+    }
+
+    /**
+     * Display table with headers and rows.
+     *
+     * @param  array  $headers
+     * @param  array  $rows
+     * @return void
+     */
+    public function table(array $headers, array $rows)
+    {
+        $table = new \Symfony\Component\Console\Helper\Table($this->output);
+        $table->setHeaders($headers)->setRows($rows);
+        $table->render();
+    }
+
+    /**
+     * Ask the user a question and return their input.
+     *
+     * @param  string  $question
+     * @param  string|null  $default
+     * @return string|null
+     */
+    public function ask($question, $default = null)
+    {
+        $helper = $this->getHelper('question');
+        $questionInstance = new \Symfony\Component\Console\Question\Question($question, $default);
+        
+        return $helper->ask($this->input, $this->output, $questionInstance);
+    }
+
+    /**
+     * Ask the user a confirmation question.
+     *
+     * @param  string  $question
+     * @param  bool  $default
+     * @return bool
+     */
+    public function confirm($question, $default = false)
+    {
+        $helper = $this->getHelper('question');
+        $questionInstance = new \Symfony\Component\Console\Question\ConfirmationQuestion($question, $default);
+        
+        return $helper->ask($this->input, $this->output, $questionInstance);
+    }
+
+    /**
+     * Give the user a single choice from an array of answers.
+     *
+     * @param  string  $question
+     * @param  array  $choices
+     * @param  string|int|null  $default
+     * @param  int|null  $attempts
+     * @return string
+     */
+    public function choice($question, array $choices, $default = null, $attempts = null)
+    {
+        $helper = $this->getHelper('question');
+        $questionInstance = new \Symfony\Component\Console\Question\ChoiceQuestion($question, $choices, $default);
+        
+        if ($attempts !== null) {
+            $questionInstance->setMaxAttempts($attempts);
+        }
+        
+        return $helper->ask($this->input, $this->output, $questionInstance);
+    }
+
+    /**
+     * Create a new progress bar.
+     *
+     * @param  int  $max
+     * @return \Symfony\Component\Console\Helper\ProgressBar
+     */
+    public function newProgressBar($max = 0)
+    {
+        return new \Symfony\Component\Console\Helper\ProgressBar($this->output, $max);
+    }
+
+    /**
+     * Write a string in a newline.
+     *
+     * @param  string  $string
+     * @param  int|string|null  $verbosity
+     * @return void
+     */
+    public function newLine($string = '', $verbosity = null)
+    {
+        $this->output->writeln($string, $this->parseVerbosity($verbosity));
     }
 
     /**

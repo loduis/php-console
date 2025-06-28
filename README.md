@@ -8,7 +8,8 @@ A lightweight PHP console application framework built on top of Symfony Console 
 - 💉 **Dependency Injection** - Constructor parameters are automatically resolved
 - 🌍 **Environment Support** - Built-in `--env` option for environment-specific behavior
 - 🔗 **Command Chaining** - Commands can call other commands using `$this->call()`
-- 🎨 **Laravel-style Interface** - Familiar API for Laravel developers
+- 🎨 **Laravel-style Interface** - Familiar API for Laravel developers with signature support
+- 📝 **Command Signatures** - Define arguments and options using Laravel's expressive syntax
 - 📊 **Rich Output Methods** - Comprehensive output formatting and user interaction methods
 
 ## Requirements
@@ -79,9 +80,13 @@ php console.php greet
 All commands must:
 
 1. Extend `PhpConsole\Command`
-2. Define a `$name` property (command name)
+2. Define a command name using either:
+   - `$name` property (legacy method), OR
+   - `$signature` property (Laravel-style, recommended)
 3. Implement the `__invoke()` method
 4. Optionally set `$description` and `$help` properties
+
+### Using Legacy $name Property
 
 ```php
 class MyCommand extends Command
@@ -92,6 +97,27 @@ class MyCommand extends Command
     
     public function __invoke(): int
     {
+        // Your command logic here
+        return static::SUCCESS;
+    }
+}
+```
+
+### Using Laravel-style $signature Property (Recommended)
+
+```php
+class CreateUserCommand extends Command
+{
+    protected $signature = 'user:create {name : The user name} {email? : The user email} {--force : Force the operation} {--role=user : The user role}';
+    protected $description = 'Create a new user';
+    
+    public function __invoke(): int
+    {
+        $name = $this->argument('name');
+        $email = $this->argument('email');
+        $force = $this->option('force');
+        $role = $this->option('role');
+        
         // Your command logic here
         return static::SUCCESS;
     }
@@ -148,6 +174,62 @@ for ($i = 0; $i < 100; $i++) {
 }
 
 $progress->finish();
+```
+
+## Command Signature Syntax
+
+The `$signature` property uses Laravel's expressive syntax to define command arguments and options in a single string:
+
+### Arguments
+
+```php
+// Required argument
+protected $signature = 'mail:send {user}';
+
+// Optional argument
+protected $signature = 'mail:send {user?}';
+
+// Optional argument with default value
+protected $signature = 'mail:send {user=john}';
+
+// Argument with description
+protected $signature = 'mail:send {user : The user ID}';
+```
+
+### Options
+
+```php
+// Boolean flag option
+protected $signature = 'mail:send {--queue}';
+
+// Option that requires a value
+protected $signature = 'mail:send {--driver=}';
+
+// Option with default value
+protected $signature = 'mail:send {--queue=default}';
+
+// Option with description
+protected $signature = 'mail:send {--queue : Queue the email}';
+```
+
+### Complete Example
+
+```php
+protected $signature = 'user:create 
+                       {name : The user name}
+                       {email? : The user email}
+                       {--force : Force creation}
+                       {--role=user : User role}';
+
+public function __invoke(): int
+{
+    $name = $this->argument('name');      // Required
+    $email = $this->argument('email');    // Optional, returns null if not provided
+    $force = $this->option('force');      // Boolean flag
+    $role = $this->option('role');        // Has default value 'user'
+    
+    return static::SUCCESS;
+}
 ```
 
 ## Advanced Features

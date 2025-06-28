@@ -53,6 +53,13 @@ abstract class Command extends SymfonyCommand
     protected $name;
 
     /**
+     * The console command signature.
+     *
+     * @var string|null
+     */
+    protected $signature;
+
+    /**
      * The console command description.
      *
      * @var string|null
@@ -67,12 +74,31 @@ abstract class Command extends SymfonyCommand
     protected $help;
 
     /**
+     * Parsed arguments from signature.
+     *
+     * @var array
+     */
+    protected $parsedArguments = [];
+
+    /**
+     * Parsed options from signature.
+     *
+     * @var array
+     */
+    protected $parsedOptions = [];
+
+    /**
      * Create a new console command instance.
      *
      * @return void
      */
     public function __construct()
     {
+        // Parse signature if provided
+        if ($this->signature) {
+            $this->parseSignature();
+        }
+
         parent::__construct($this->name);
 
         // Once we have constructed the command, we'll set the description and other
@@ -359,28 +385,134 @@ abstract class Command extends SymfonyCommand
     }
 
     /**
+     * Parse the signature to extract command name, arguments and options.
+     *
+     * @return void
+     */
+    protected function parseSignature(): void
+    {
+        if (!$this->signature) {
+            return;
+        }
+
+        // Extract command name (everything before first space or {)
+        preg_match('/^([^\s{]+)/', $this->signature, $nameMatch);
+        if (isset($nameMatch[1])) {
+            $this->name = $nameMatch[1];
+        }
+
+        // Extract arguments: {name}, {name?}, {name=default}, {name : description}
+        preg_match_all('/\{([^}]+)\}/', $this->signature, $matches);
+        
+        foreach ($matches[1] as $match) {
+            if (strpos($match, '--') === 0) {
+                // This is an option
+                $this->parseOption($match);
+            } else {
+                // This is an argument
+                $this->parseArgument($match);
+            }
+        }
+    }
+
+    /**
+     * Parse an argument from signature.
+     *
+     * @param string $argument
+     * @return void
+     */
+    protected function parseArgument(string $argument): void
+    {
+        $name = $argument;
+        $description = '';
+        $optional = false;
+        $default = null;
+
+        // Extract description if present: {name : description}
+        if (strpos($argument, ' : ') !== false) {
+            [$name, $description] = explode(' : ', $argument, 2);
+        }
+
+        // Check if optional: {name?}
+        if (substr($name, -1) === '?') {
+            $optional = true;
+            $name = rtrim($name, '?');
+        }
+
+        // Check for default value: {name=default}
+        if (strpos($name, '=') !== false) {
+            [$name, $default] = explode('=', $name, 2);
+            $optional = true;
+        }
+
+        $mode = $optional ? InputArgument::OPTIONAL : InputArgument::REQUIRED;
+
+        $this->parsedArguments[] = new InputArgument($name, $mode, $description, $default);
+    }
+
+    /**
+     * Parse an option from signature.
+     *
+     * @param string $option
+     * @return void
+     */
+    protected function parseOption(string $option): void
+    {
+        $name = ltrim($option, '-');
+        $description = '';
+        $mode = InputOption::VALUE_NONE;
+        $default = null;
+
+        // Extract description if present: {--option : description}
+        if (strpos($option, ' : ') !== false) {
+            [$name, $description] = explode(' : ', $option, 2);
+            $name = ltrim($name, '-');
+        }
+
+        // Check for value modes: {--option=} or {--option=default}
+        if (strpos($name, '=') !== false) {
+            [$name, $default] = explode('=', $name, 2);
+            $mode = $default === '' ? InputOption::VALUE_REQUIRED : InputOption::VALUE_OPTIONAL;
+            if ($default === '') {
+                $default = null;
+            }
+        }
+
+        $this->parsedOptions[] = new InputOption($name, null, $mode, $description, $default);
+    }
+
+    /**
      * Specify the arguments and options on the command.
      *
      * @return void
      */
     protected function configure(): void
     {
-        // We will loop through all of the arguments and options for the command and
-        // set them all on the base command instance. This specifies what can get
-        // passed into these commands as "parameters" to control the execution.
-        foreach ($this->getArguments() as $arguments) {
-            if ($arguments instanceof InputArgument) {
-                $this->getDefinition()->addArgument($arguments);
-            } else {
-                $this->addArgument(...array_values($arguments));
+        // If signature was used, add parsed arguments and options
+        if ($this->signature) {
+            foreach ($this->parsedArguments as $argument) {
+                $this->getDefinition()->addArgument($argument);
             }
-        }
 
-        foreach ($this->getOptions() as $options) {
-            if ($options instanceof InputOption) {
-                $this->getDefinition()->addOption($options);
-            } else {
-                $this->addOption(...array_values($options));
+            foreach ($this->parsedOptions as $option) {
+                $this->getDefinition()->addOption($option);
+            }
+        } else {
+            // Fallback to legacy method for backwards compatibility
+            foreach ($this->getArguments() as $arguments) {
+                if ($arguments instanceof InputArgument) {
+                    $this->getDefinition()->addArgument($arguments);
+                } else {
+                    $this->addArgument(...array_values($arguments));
+                }
+            }
+
+            foreach ($this->getOptions() as $options) {
+                if ($options instanceof InputOption) {
+                    $this->getDefinition()->addOption($options);
+                } else {
+                    $this->addOption(...array_values($options));
+                }
             }
         }
     }

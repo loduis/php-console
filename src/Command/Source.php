@@ -11,7 +11,7 @@ class Source
 
     protected $count;
 
-    protected $index;
+    protected $index = -1;
 
     /**
      * Get the command class for the file
@@ -26,7 +26,6 @@ class Source
         $source       = $this->getContents($source);
         $this->tokens = token_get_all($source);
         $this->count  = count($this->tokens);
-        $this->index  = -1;
     }
 
     /**
@@ -69,15 +68,15 @@ class Source
         return $source;
     }
 
-    protected function findToken($posibleTokens, Closure $where = null)
+    protected function findToken(int | array $possibleTokens, ?Closure $where = null): bool | int
     {
         if ($hasWhere = ($where instanceof Closure)) {
             $where = Closure::bind($where, $this);
         }
-        $posibleTokens = (array) $posibleTokens;
+        $possibleTokens = (array) $possibleTokens;
         foreach ($this->getTokens() as $index => $token) {
-            if (in_array($token['search'], $posibleTokens) &&
-                (!$hasWhere || ($where($index) && ($index = $this->index)))
+            if (in_array($token['search'], $possibleTokens) &&
+                (!$hasWhere || ($where($index) && ($index = $this->index) !== -1))
             ) {
                 return $this->index = $index;
             }
@@ -86,10 +85,10 @@ class Source
         return false;
     }
 
-    protected function getTokenContent($posibleTokens, $start = null)
+    protected function getTokenContent($possibleTokens, $start = null)
     {
         $content       = null;
-        $posibleTokens = (array) $posibleTokens;
+        $possibleTokens = (array) $possibleTokens;
         $endTokens     = ['{', ';', '('];
         foreach ($this->getTokens($start) as $index => $token) {
             if (($content !==null && $token['number'] == T_WHITESPACE) ||
@@ -97,7 +96,7 @@ class Source
             ) {
                 break;
             }
-            if (in_array($token['number'], $posibleTokens)) {
+            if (in_array($token['number'], $possibleTokens)) {
                 $content    .= $token['text'];
                 $this->index = $index;
             }
@@ -106,13 +105,13 @@ class Source
         return $content;
     }
 
-    protected function getTokenContentUntil($posibleTokens, $after = null)
+    protected function getTokenContentUntil($possibleTokens, $after = null)
     {
         $content       = null;
-        $posibleTokens = (array) $posibleTokens;
+        $possibleTokens = (array) $possibleTokens;
         $after         = (array) $after;
         foreach ($this->getTokens() as $index => $token) {
-            if (in_array($token['search'], $posibleTokens)) {
+            if (in_array($token['search'], $possibleTokens)) {
                 break;
             }
             if ($token['number'] == T_WHITESPACE ||
@@ -184,6 +183,9 @@ class Source
 
     public function getProperty($name)
     {
+        // Reset index to start from beginning for each property search
+        $this->index = -1;
+        
         $name = array_map(
             function ($name) {
                 if (strpos($name, '$') !== 0) {

@@ -7,35 +7,20 @@ use Symfony\Component\Finder\SplFileInfo;
 
 class Source
 {
-    protected $tokens;
+    protected array $tokens;
 
-    protected $count;
+    protected int $count;
 
-    protected $index = -1;
+    protected int $index = -1;
 
-    /**
-     * Get the command class for the file
-     *
-     * @param  string|array|\Symfony\Component\Finder\SplFileInfo $source
-     *
-     * @return void
-     */
-
-    public function __construct($source)
+    public function __construct(string|array|SplFileInfo $source)
     {
         $source       = $this->getContents($source);
         $this->tokens = token_get_all($source);
         $this->count  = count($this->tokens);
     }
 
-    /**
-     * Get the command source from file
-     *
-     * @param  string|\Symfony\Component\Finder\SplFileInfo $file
-     *
-     * @return static
-     */
-    public static function fromFile($file)
+    public static function fromFile(string|SplFileInfo $file): static
     {
         if (!$file instanceof SplFileInfo) {
             $file = new SplFileInfo($file, '', '');
@@ -44,14 +29,7 @@ class Source
         return new static($file);
     }
 
-    /**
-     * Get the command class for the file
-     *
-     * @param  string|\Symfony\Component\Finder\SplFileInfo $file
-     *
-     * @return string
-     */
-    protected function getContents($source)
+    protected function getContents(string|array|SplFileInfo $source): string
     {
         if ($source instanceof SplFileInfo) {
             $source = $source->getContents();
@@ -61,7 +39,7 @@ class Source
             $source = implode(PHP_EOL, $source);
         }
 
-        if (strpos($source, '<?php') != 0) {
+        if (!str_starts_with($source, '<?php')) {
             $source = '<?php ' . ltrim($source);
         }
 
@@ -85,7 +63,7 @@ class Source
         return false;
     }
 
-    protected function getTokenContent($possibleTokens, $start = null)
+    protected function getTokenContent(int|array $possibleTokens, ?int $start = null): ?string
     {
         $content       = null;
         $possibleTokens = (array) $possibleTokens;
@@ -105,7 +83,7 @@ class Source
         return $content;
     }
 
-    protected function getTokenContentUntil($possibleTokens, $after = null)
+    protected function getTokenContentUntil(string|array $possibleTokens, string|array|null $after = null): ?string
     {
         $content       = null;
         $possibleTokens = (array) $possibleTokens;
@@ -127,7 +105,7 @@ class Source
         return $content === null ? $content: trim($content);
     }
 
-    protected function getTokens($start = null)
+    protected function getTokens(?int $start = null): \Generator
     {
         $start = ($start ?: $this->index);
         for ($index = $start + 1; $index < $this->count; ++ $index) {
@@ -135,7 +113,7 @@ class Source
         }
     }
 
-    protected function getToken($index)
+    protected function getToken(int $index): array
     {
         $token = $this->tokens[$index];
         if (!is_array($token)) {
@@ -149,57 +127,55 @@ class Source
         ];
     }
 
-    public function getNamespace()
+    public function getNamespace(): ?string
     {
         $search = PHP_VERSION_ID < 80000 ? [T_STRING, T_NS_SEPARATOR] : T_NAME_QUALIFIED;
         if ($this->findToken(T_NAMESPACE) &&
             ($namespace = $this->getTokenContent($search))
         ) {
-            if (strpos($namespace, '\\') !== 0) {
+            if (!str_starts_with($namespace, '\\')) {
                 $namespace = "\\$namespace";
             }
 
             return $namespace;
         }
+
+        return null;
     }
 
-    public function getShortClassName()
+    public function getShortClassName(): ?string
     {
         if ($this->findToken([T_CLASS, T_TRAIT]) &&
             ($className = $this->getTokenContent(T_STRING))
         ) {
             return $className;
         }
+
+        return null;
     }
 
-    public function getClassName()
+    public function getClassName(): ?string
     {
         $namespace = $this->getNamespace();
 
         if ($className = $this->getShortClassName()) {
             return $namespace . '\\' . $className;
         }
+
+        return null;
     }
 
-    public function getProperty($name)
+    public function getProperty(string $name): string|false
     {
         // Reset index to start from beginning for each property search
         $this->index = -1;
-        
+
         $name = array_map(
-            function ($name) {
-                if (strpos($name, '$') !== 0) {
-                    $name = '$' . $name;
-                }
-                return $name;
-            },
+            fn($name) => str_starts_with($name, '$') ? $name : '$' . $name,
             (array) $name
         );
 
-        $where = function ($index) use ($name) {
-            $varname = $this->getTokenContent(T_VARIABLE, $index);
-            return $varname && in_array($varname, $name);
-        };
+        $where = fn($index) => ($varname = $this->getTokenContent(T_VARIABLE, $index)) && in_array($varname, $name);
 
         if ($this->findToken([T_PRIVATE, T_PROTECTED, T_PUBLIC], $where)) {
             $propertySource = $this->getTokenContentUntil(';', '=');

@@ -6,7 +6,7 @@ use Symfony\Component\Finder\Finder;
 
 class Resolve
 {
-    private $path;
+    private string $path;
 
     public function __construct(string $path)
     {
@@ -21,7 +21,8 @@ class Resolve
                 ->in($this->path)
                 ->name('*Command.php');
             foreach ($files as $file) {
-                if ($command = $this->command($file)) {
+                $command = $this->command($file);
+                if ($command) {
                     $commands = array_merge($commands, $command);
                 }
             }
@@ -30,7 +31,7 @@ class Resolve
         return $commands;
     }
 
-    protected function command($file): array
+    protected function command(mixed $file): array
     {
         $source = new Source($file);
         $class = $source->getClassName();

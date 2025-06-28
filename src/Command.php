@@ -45,47 +45,17 @@ abstract class Command extends SymfonyCommand
         'normal' => OutputInterface::VERBOSITY_NORMAL,
     ];
 
-    /**
-     * The console command name.
-     *
-     * @var string
-     */
     protected $name;
 
-    /**
-     * The console command signature.
-     *
-     * @var string|null
-     */
     protected $signature;
 
-    /**
-     * The console command description.
-     *
-     * @var string|null
-     */
     protected $description = 'Command description';
 
-    /**
-     * The console command help text.
-     *
-     * @var string|null
-     */
     protected $help;
 
-    /**
-     * Parsed arguments from signature.
-     *
-     * @var array
-     */
-    protected $parsedArguments = [];
+    protected array $parsedArguments = [];
 
-    /**
-     * Parsed options from signature.
-     *
-     * @var array
-     */
-    protected $parsedOptions = [];
+    protected array $parsedOptions = [];
 
     /**
      * Create a new console command instance.
@@ -192,14 +162,7 @@ abstract class Command extends SymfonyCommand
         $table->render();
     }
 
-    /**
-     * Ask the user a question and return their input.
-     *
-     * @param  string  $question
-     * @param  string|null  $default
-     * @return string|null
-     */
-    public function ask($question, $default = null)
+    public function ask(string $question, ?string $default = null): ?string
     {
         $helper = $this->getHelper('question');
         $questionInstance = new \Symfony\Component\Console\Question\Question($question, $default);
@@ -207,14 +170,7 @@ abstract class Command extends SymfonyCommand
         return $helper->ask($this->input, $this->output, $questionInstance);
     }
 
-    /**
-     * Ask the user a confirmation question.
-     *
-     * @param  string  $question
-     * @param  bool  $default
-     * @return bool
-     */
-    public function confirm($question, $default = false)
+    public function confirm(string $question, bool $default = false): bool
     {
         $helper = $this->getHelper('question');
         $questionInstance = new \Symfony\Component\Console\Question\ConfirmationQuestion($question, $default);
@@ -222,34 +178,19 @@ abstract class Command extends SymfonyCommand
         return $helper->ask($this->input, $this->output, $questionInstance);
     }
 
-    /**
-     * Give the user a single choice from an array of answers.
-     *
-     * @param  string  $question
-     * @param  array  $choices
-     * @param  string|int|null  $default
-     * @param  int|null  $attempts
-     * @return string
-     */
-    public function choice($question, array $choices, $default = null, $attempts = null)
+    public function choice(string $question, array $choices, string|int|null $default = null, ?int $attempts = null): string
     {
         $helper = $this->getHelper('question');
         $questionInstance = new \Symfony\Component\Console\Question\ChoiceQuestion($question, $choices, $default);
         
-        if ($attempts !== null) {
+        if ($attempts) {
             $questionInstance->setMaxAttempts($attempts);
         }
         
         return $helper->ask($this->input, $this->output, $questionInstance);
     }
 
-    /**
-     * Create a new progress bar.
-     *
-     * @param  int  $max
-     * @return \Symfony\Component\Console\Helper\ProgressBar
-     */
-    public function newProgressBar($max = 0)
+    public function newProgressBar(int $max = 0): \Symfony\Component\Console\Helper\ProgressBar
     {
         return new \Symfony\Component\Console\Helper\ProgressBar($this->output, $max);
     }
@@ -332,24 +273,12 @@ abstract class Command extends SymfonyCommand
         return $command->run($input, $this->output);
     }
 
-    /**
-     * Determine if the given option is present.
-     *
-     * @param  string  $name
-     * @return bool
-     */
-    public function hasOption($name)
+    public function hasOption(string $name): bool
     {
         return $this->input->hasOption($name);
     }
 
-    /**
-     * Get the value of a command option.
-     *
-     * @param  string|null  $key
-     * @return string|array|bool|null
-     */
-    public function option($key = null)
+    public function option(?string $key = null): mixed
     {
         if ($key === null) {
             return $this->input->getOptions();
@@ -358,24 +287,12 @@ abstract class Command extends SymfonyCommand
         return $this->input->getOption($key);
     }
 
-    /**
-     * Determine if the given argument is present.
-     *
-     * @param  string|int  $name
-     * @return bool
-     */
-    public function hasArgument($name)
+    public function hasArgument(string|int $name): bool
     {
         return $this->input->hasArgument($name);
     }
 
-    /**
-     * Get the value of a command argument.
-     *
-     * @param  string|null  $key
-     * @return string|array|null
-     */
-    public function argument($key = null)
+    public function argument(?string $key = null): mixed
     {
         if ($key === null) {
             return $this->input->getArguments();
@@ -405,7 +322,7 @@ abstract class Command extends SymfonyCommand
         preg_match_all('/\{([^}]+)\}/', $this->signature, $matches);
         
         foreach ($matches[1] as $match) {
-            if (strpos($match, '--') === 0) {
+            if (str_starts_with($match, '--')) {
                 // This is an option
                 $this->parseOption($match);
             } else {
@@ -434,7 +351,7 @@ abstract class Command extends SymfonyCommand
         }
 
         // Check if optional: {name?}
-        if (substr($name, -1) === '?') {
+        if (str_ends_with($name, '?')) {
             $optional = true;
             $name = rtrim($name, '?');
         }
